@@ -30,6 +30,7 @@ MAX_HOOK_HITS = 12
 CLAUDE_DIR = ".claude"
 OPENERS = re.compile(r"^\s*(certainly|great question|you're absolutely right|sure[,!]|absolutely[,!])", re.I)
 CLOSERS = re.compile(r"(i hope this helps|let me know if|feel free to)", re.I)
+FENCE = re.compile(r"^ {0,3}(```|~~~)")
 
 
 def load_linter():
@@ -73,12 +74,31 @@ def excluded(target):
     return False
 
 
+def fenced_lines(text):
+    """For each line of `text`, whether it is a fence delimiter or inside a fenced block."""
+    flags, fenced = [], False
+    for line in text.split("\n"):
+        delimiter = bool(FENCE.match(line))
+        flags.append(fenced or delimiter)
+        fenced ^= delimiter
+    return flags
+
+
 def written_text(event, text):
-    """The text that the tool wrote, and the count of file lines above it."""
+    """The text that the tool wrote, and the count of file lines above it.
+
+    An Edit's `new_string` can sit inside a fence that opens above it, so the lines of
+    `new_string` that the file holds in a fenced block are blank in the result.
+    """
     new = (event.get("tool_input") or {}).get("new_string")
     if event.get("tool_name") != "Edit" or new is None:
         return text, 0
-    return new, text.count("\n", 0, max(text.find(new), 0))
+    start = text.find(new)
+    if start < 0:
+        return new, 0
+    above = text.count("\n", 0, start)
+    flags = fenced_lines(text)[above:]
+    return "\n".join("" if fenced else line for line, fenced in zip(new.split("\n"), flags)), above
 
 
 def post_tool_use(event):

@@ -110,6 +110,22 @@ def test_edit_that_deletes_text_is_silent():
         code, out, err = run(edit(write_slop(d), ""))
     assert code == 0, (code, err)
 
+def test_edit_inside_a_fence_that_opens_above_it_is_silent():
+    with tempfile.TemporaryDirectory() as d:
+        path = pathlib.Path(d, "notes.md")
+        path.write_text("# Title\n\n```\ntop\nYou should check this.\nbottom\n```\n", encoding="utf-8")
+        code, out, err = run(edit(str(path), "You should check this."))
+    assert code == 0, (code, err)
+
+def test_edit_flags_the_text_after_a_fence_closes():
+    with tempfile.TemporaryDirectory() as d:
+        path = pathlib.Path(d, "notes.md")
+        path.write_text("```\nYou should keep this.\n```\nYou should check this.\n", encoding="utf-8")
+        code, out, err = run(edit(str(path), "You should keep this.\n```\nYou should check this."))
+    assert code == 2, (code, err)
+    assert "line 4, banned_modal: should" in err, err
+    assert "line 2" not in err, err
+
 def test_write_still_lints_the_whole_file():
     with tempfile.TemporaryDirectory() as d:
         event = post(write_slop(d))
