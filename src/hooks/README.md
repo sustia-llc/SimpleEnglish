@@ -47,7 +47,7 @@ node --test src/hooks/simple-english-activate.test.js
 
 Two more hooks run under Claude Code, both advisory. Neither one blocks.
 
-- `PostToolUse` on `Write` and `Edit`: when the file is Markdown, `src/hooks/lint_hook.py` lints it with `evals/ste_lint.py` and shows a one-line summary of the violations to the model.
+- `PostToolUse` on `Write` and `Edit`: when the file is Markdown, `src/hooks/lint_hook.py` lints the text that the tool wrote. It uses `evals/ste_lint.py` and shows each hit with its file line to the model. For `Edit`, that text is `new_string`. For `Write`, it is the whole file.
 - `Stop`: the same script reads the last reply and adds a system message when the reply breaks the register: an em-dash, bold, a header, a list item, a filler opener or closer, or a slop word.
 
 Codex runs only the `SessionStart` hook. Test the checks with `python3 src/hooks/test_lint_hook.py`.

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Advisory writing checks for Claude Code hooks. Never blocks.
 
-PostToolUse (Write|Edit on a .md file): lint the file with evals/ste_lint.py
-and, when it has violations, print the offending text and line number for
-each hit (capped at MAX_HOOK_HITS) to stderr and exit 2 so the model sees
-it. Exit 2 on PostToolUse is advisory: the tool already ran. Agent-internal
+PostToolUse (Write|Edit on a .md file): lint the text that the tool wrote with
+evals/ste_lint.py: `new_string` for Edit, the whole file for Write. When it
+has violations, print the offending text and file line number for each hit
+(capped at MAX_HOOK_HITS) to stderr and exit 2 so the model sees it. Exit 2
+on PostToolUse is advisory: the tool already ran. Agent-internal
 Markdown, such as memory files under the Claude configuration directory, is
 skipped. The writing rules do not govern it, and a summary of its
 violations only spends tokens. Set SIMPLE_ENGLISH_LINT_EXCLUDE to skip more
@@ -72,6 +73,14 @@ def excluded(target):
     return False
 
 
+def written_text(event, text):
+    """The text that the tool wrote, and the count of file lines above it."""
+    new = (event.get("tool_input") or {}).get("new_string")
+    if event.get("tool_name") != "Edit" or new is None:
+        return text, 0
+    return new, text.count("\n", 0, max(text.find(new), 0))
+
+
 def post_tool_use(event):
     path = (event.get("tool_input") or {}).get("file_path") or ""
     if not path.endswith(".md"):
@@ -86,16 +95,17 @@ def post_tool_use(event):
         text = target.read_text(encoding="utf-8")
     except OSError:
         return 0
-    report = lint.lint(text, "descriptive")
+    written, offset = written_text(event, text)
+    report = lint.lint(written, "descriptive")
     if not report["violations_total"]:
         return 0
-    detail = lint.lint_detail(text, "descriptive")
-    lines = [f"simple-english: {target.name} has {report['violations_total']} STE violations."]
+    detail = lint.lint_detail(written, "descriptive")
+    lines = [f"simple-english: the text written to {target.name} has {report['violations_total']} STE violations."]
     for h in detail[:MAX_HOOK_HITS]:
-        lines.append(f"  line {h['line']}, {h['category']}: {h['text']}")
+        lines.append(f"  line {h['line'] + offset}, {h['category']}: {h['text']}")
     if len(detail) > MAX_HOOK_HITS:
         lines.append(f"  and {len(detail) - MAX_HOOK_HITS} more hit(s).")
-    lines.append("Fix these hits in the file you just wrote, then continue.")
+    lines.append("Fix these hits in the text you just wrote, then continue.")
     sys.stderr.write("\n".join(lines) + "\n")
     return 2
 

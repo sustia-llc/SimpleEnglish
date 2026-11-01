@@ -86,6 +86,37 @@ def test_post_tool_use_matches_a_glob_through_a_symlinked_directory():
         assert run(post(path))[0] == 2
         assert run(post(path), env={"SIMPLE_ENGLISH_LINT_EXCLUDE": f"{d}/notes/*"})[0] == 0
 
+def edit(path, new_string):
+    return {"hook_event_name": "PostToolUse", "tool_name": "Edit",
+            "tool_input": {"file_path": path, "old_string": "x", "new_string": new_string}}
+
+def test_edit_ignores_older_text_in_the_file():
+    with tempfile.TemporaryDirectory() as d:
+        path = pathlib.Path(d, "notes.md")
+        path.write_text(SLOP + "Run the migration.\n", encoding="utf-8")
+        code, out, err = run(edit(str(path), "Run the migration."))
+    assert code == 0, (code, err)
+
+def test_edit_flags_the_new_text_at_its_file_line():
+    with tempfile.TemporaryDirectory() as d:
+        path = pathlib.Path(d, "notes.md")
+        path.write_text("# Title\n\nFirst line.\nYou should check this.\n", encoding="utf-8")
+        code, out, err = run(edit(str(path), "You should check this."))
+    assert code == 2, (code, err)
+    assert "line 4, banned_modal: should" in err, err
+
+def test_edit_that_deletes_text_is_silent():
+    with tempfile.TemporaryDirectory() as d:
+        code, out, err = run(edit(write_slop(d), ""))
+    assert code == 0, (code, err)
+
+def test_write_still_lints_the_whole_file():
+    with tempfile.TemporaryDirectory() as d:
+        event = post(write_slop(d))
+        event["tool_input"]["new_string"] = "Run the migration."
+        code, out, err = run(event)
+    assert code == 2, (code, err)
+
 def test_stop_flags_slop_reply_and_never_blocks():
     long = "Great question! " + "This is a robust sentence. " * 7 + "I hope this helps!"
     code, out, err = run({"hook_event_name": "Stop", "last_assistant_message": long})
