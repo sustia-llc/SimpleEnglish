@@ -13,8 +13,8 @@ files under the Claude configuration directory or files in the Claude Code
 session temp directory, is skipped. Set SIMPLE_ENGLISH_LINT_EXCLUDE to skip
 more paths.
 
-Stop: read `last_assistant_message`, check the reply register (no bold and
-no em-dashes), and return a systemMessage only when the reply
+Stop: read `last_assistant_message`, check the reply register (no bold),
+and return a systemMessage only when the reply
 breaks it. The same problems are saved for the session, and the next
 UserPromptSubmit event adds them to the model context once. Always exit 0,
 so the session never loops.
@@ -169,7 +169,7 @@ def stop(event):
     lint = load_linter()
     if lint is not None:
         c = lint.reader_check(reply)["counts"]
-        for key, label in (("em_dash", "em-dash"), ("bold_spans", "bold span")):
+        for key, label in (("bold_spans", "bold span"),):
             if c[key]:
                 problems.append(f"{c[key]} {label}(s)")
         slop = sum(1 for h in lint.lint_detail(strip_code(reply), "descriptive")
@@ -213,7 +213,7 @@ def user_prompt_submit(event):
         return 0
     if summary:
         context = (f"simple-english reply check: your previous reply had {summary}. "
-                   "Answer this prompt with no bold and no em-dashes.")
+                   "Answer this prompt with no bold.")
         print(json.dumps({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": context}}))
     return 0
 

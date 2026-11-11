@@ -146,6 +146,10 @@ def test_stop_does_not_count_sentences():
     code, out, err = run({"hook_event_name": "Stop", "last_assistant_message": reply})
     assert code == 0 and out.strip() == "", (code, out)
 
+def test_stop_allows_em_dashes_and_semicolons():
+    code, out, err = run({"hook_event_name": "Stop", "last_assistant_message": "The build failed — the disk was full; free 2 GB."})
+    assert code == 0 and out.strip() == "", f"em-dash or semicolon flagged in a reply: {out}"
+
 def test_stop_is_silent_on_a_good_reply():
     code, out, err = run({"hook_event_name": "Stop", "last_assistant_message": "The build failed because the disk was full. Free 2 GB and run it again."})
     assert code == 0 and out.strip() == "", (code, out)

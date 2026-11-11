@@ -116,7 +116,6 @@ The reply, every chat answer:
 |---|---|
 | Prose by default: a list or a table only for content of that shape, no bold | The wall of formatting around a one-line answer |
 | First sentence answers | The preamble |
-| No em-dashes | The spliced half-thought |
 | Define a concept term in a few words | Jargon the reader has to look up |
 | No contractions, openers, or closers | "Great question!" and "Hope this helps!" |
 

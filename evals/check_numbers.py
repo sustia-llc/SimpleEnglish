@@ -105,7 +105,7 @@ def sync():
     if prompt != style:
         problems.append("rule block differs between prompts/system-prompt.md and output-styles/simple-english.md")
     skill = (ROOT / "skills" / "simple-english" / "SKILL.md").read_text(encoding="utf-8")
-    for phrase in ("Answer in prose", "No em-dashes", "No contractions", "first sentence gives the answer",
+    for phrase in ("Answer in prose", "No contractions", "first sentence gives the answer",
                    "Condition before command", "make sure that", "Never touch"):
         for name, text in (("SKILL.md", skill), ("prompts/system-prompt.md", prompt)):
             if phrase.lower() not in text.lower():

@@ -34,12 +34,11 @@ When asked to write or rewrite documentation, apply these rules to the prose:
 4. Use simple tenses and active voice. No present perfect ("has completed" → "completed"). No "-ing" verb after a comma (", making it easy" → new sentence). Name the actor: "You run the migration."
 5. Modals: can, will, must. Never should, would, may, might, could. A required "should" becomes "must". An optional one is deleted.
 6. Use complete grammar. No contractions, keep articles, keep "that". Write short sentences, not telegraph style.
-7. No semicolons and no em-dashes. Write two sentences, or name the relation.
-8. One word, one meaning, for the whole document. Use `make sure that` for check, verify, confirm, validate, ensure. Use `configuration` for config, settings, options. Break noun chains over three words with a preposition ("the timeout value for the connection pool").
-9. Give the reader each term and each fact before the step that needs it. Define a concept term at its first use, under ten words, one per sentence. Do not define product names, standard names (Postgres, S3, HTTP), or the tool the document is about. Also name the host, the flag, or the prior step that a command depends on. "Restart the service" becomes "Restart the `sync` service on the host that runs the job."
-10. State the fact, not its importance. Delete words that carry no fact: simply, seamlessly, robust, powerful, comprehensive, leverage, crucial, "in order to", "it is worth noting". No "not just X, it is Y". No decorative triplets. No "in conclusion".
-11. Use formatting only where it carries structure. No bold lead-ins, no bold as emphasis, no emoji, no heading over two sentences. A vertical list is for three or more parallel items or steps: colon on the lead-in, uppercase start, one instruction per item.
-12. Warnings: command or condition first, then the risk. "Do not run this against production. The command deletes rows."
+7. One word, one meaning, for the whole document. Use `make sure that` for check, verify, confirm, validate, ensure. Use `configuration` for config, settings, options. Break noun chains over three words with a preposition ("the timeout value for the connection pool").
+8. Give the reader each term and each fact before the step that needs it. Define a concept term at its first use, under ten words, one per sentence. Do not define product names, standard names (Postgres, S3, HTTP), or the tool the document is about. Also name the host, the flag, or the prior step that a command depends on. "Restart the service" becomes "Restart the `sync` service on the host that runs the job."
+9. State the fact, not its importance. Delete words that carry no fact: simply, seamlessly, robust, powerful, comprehensive, leverage, crucial, "in order to", "it is worth noting". No "not just X, it is Y". No decorative triplets. No "in conclusion".
+10. Use formatting only where it carries structure. No bold lead-ins, no bold as emphasis, no emoji, no heading over two sentences. A vertical list is for three or more parallel items or steps: colon on the lead-in, uppercase start, one instruction per item.
+11. Warnings: command or condition first, then the risk. "Do not run this against production. The command deletes rows."
 
 Use American spelling. `references/word-swaps.md` maps the overused words to plain ones. For an error message, a runbook, an incident report, release notes, a commit message, or UI copy, read `references/use-cases.md` first. It names the mode and the pattern for each.
 
@@ -62,18 +61,17 @@ Every chat reply, in every mode, follows these rules:
 
 1. Answer in prose by default. Use a label line, a list, or a table only when the content has that shape. The shapes are separate blocks, three or more parallel items, steps in order, and a comparison across attributes. No bold. A code block is legal when the reader must copy it.
 2. The first sentence gives the answer or the result. Do not restate the question.
-3. No em-dashes. Name the relation ("because", "but", "for example") or write two sentences.
-4. Define a concept term in a few words the first time you use it: "idempotent (safe to run twice)". Do not define product names.
-5. No contractions. No openers ("Certainly", "Great question") and no closers ("I hope this helps", "Let me know").
-6. Do not shorten quoted error text, security warnings, or confirmations before a destructive action.
+3. Define a concept term in a few words the first time you use it: "idempotent (safe to run twice)". Do not define product names.
+4. No contractions. No openers ("Certainly", "Great question") and no closers ("I hope this helps", "Let me know").
+5. Do not shorten quoted error text, security warnings, or confirmations before a destructive action.
 
 Before: The failure stems from control-plane leader election during pod churn — nothing to worry about!
 After: The pods restarted and the queue lost its leader for a short time. It recovered without help. You do not have to do anything.
 
 ## Self-Check Before You Deliver
 
-1. Reply: search for `—` and `**`. Remove each one. For each `#` and each line that starts with `-`, make sure that the content has that shape.
-2. Document: count the words in your three longest sentences. Over 20 or 25, split. Search for `'`, `has been`, `should`, `may`, `;`, `—`, `, making`, `**`, `check`, `verify`, `config`, and any heading that covers fewer than three sentences. Fix each hit. Read each step: does it name a host, a flag, or a prior step the reader must already have? If not, add it or point to it.
+1. Reply: search for `**`. Remove each one. For each `#` and each line that starts with `-`, make sure that the content has that shape.
+2. Document: count the words in your three longest sentences. Over 20 or 25, split. Search for `'`, `has been`, `should`, `may`, `, making`, `**`, `check`, `verify`, `config`, and any heading that covers fewer than three sentences. Fix each hit. Read each step: does it name a host, a flag, or a prior step the reader must already have? If not, add it or point to it.
 
 ## Modes
 

@@ -114,8 +114,6 @@ After: CAUTION: Do not use the `--force` flag against production. The flag delet
 
 Rule 8.6 matters for software text: `sqlpipe run --config sqlpipe.yaml` in backticks counts as one word.
 
-Dashes (a rule of this skill, not of the standard): an em-dash (`—`) splices two statements and hides the logic between them. Name the relation ("because", "but", "for example") or write two sentences. A spaced or double hyphen between statements is the same dash. A range (`5–10`), a list marker, and a flag (`--force`) are not.
-
 ### Section 9: Writing practices (Rules 9.1-9.4, GR-1 to GR-8)
 
 | Rule | Instruction |
