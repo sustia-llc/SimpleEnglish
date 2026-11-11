@@ -21,7 +21,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "fish -c 'load_nvm >&2; node \"$argv[1]\"' \"${CLAUDE_PLUGIN_ROOT}/src/hooks/simple-english-activate.js\"",
+            "command": "sh -c 'if command -v node >/dev/null 2>&1; then exec node \"$1\"; fi; exec fish -c \"load_nvm >&2; node \\$argv[1]\" \"$1\"' sh \"${CLAUDE_PLUGIN_ROOT}/src/hooks/simple-english-activate.js\"",
             "timeout": 10,
             "statusMessage": "Loading Simple English..."
           }
