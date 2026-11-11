@@ -150,11 +150,83 @@ def test_stop_is_silent_on_a_good_reply():
     code, out, err = run({"hook_event_name": "Stop", "last_assistant_message": "The build failed because the disk was full. Free 2 GB and run it again."})
     assert code == 0 and out.strip() == "", (code, out)
 
+def write_text(directory, text, name="notes.md"):
+    path = pathlib.Path(directory, name)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+    return str(path)
+
+def test_quoted_text_and_blockquotes_are_not_linted():
+    text = 'The owner said "should I disable the output tool, it\'s noisy".\n\n> We may want it later.\n'
+    with tempfile.TemporaryDirectory() as d:
+        code, out, err = run(post(write_text(d, text)))
+    assert code == 0, f"quoted or blockquoted text was linted: {err}"
+
+def test_text_outside_a_quote_still_lints():
+    with tempfile.TemporaryDirectory() as d:
+        code, out, err = run(post(write_text(d, 'The owner said "stop". You should restart it.\n')))
+    assert code == 2 and "banned_modal: should" in err, (code, err)
+
+def test_semicolons_and_em_dashes_are_not_reported():
+    with tempfile.TemporaryDirectory() as d:
+        code, out, err = run(post(write_text(d, "The deploy failed; the disk was full. The retry failed — the port was closed.\n")))
+    assert code == 0, f"semicolon or em-dash reported: {err}"
+
+def test_descriptive_trailing_condition_is_not_reported():
+    with tempfile.TemporaryDirectory() as d:
+        code, out, err = run(post(write_text(d, "The default is 0 when the flag is absent.\n")))
+    assert code == 0, f"descriptive trailing condition reported: {err}"
+
+def test_imperative_trailing_condition_is_reported():
+    with tempfile.TemporaryDirectory() as d:
+        code, out, err = run(post(write_text(d, "Restart the service if the build fails.\n")))
+    assert code == 2 and "trailing_condition: Restart the service" in err, (code, err)
+
+def test_harness_is_not_slop_but_robust_is():
+    with tempfile.TemporaryDirectory() as d:
+        code, out, err = run(post(write_text(d, "The test harness runs each case. The plan is load-bearing.\n")))
+        assert code == 0, f"harness or load-bearing reported as slop: {err}"
+        code, out, err = run(post(write_text(d, "The test harness is robust.\n")))
+    assert code == 2 and "slop_word: robust" in err and "harness" not in err.split("\n", 1)[1], (code, err)
+
+def test_session_temp_dir_is_skipped():
+    with tempfile.TemporaryDirectory() as d:
+        assert run(post(write_slop(pathlib.Path(d, "claude-notes"))))[0] == 2, "a claude-<letters> dir must still lint"
+        scratch = pathlib.Path(d, "claude-1000", "proj", "scratchpad")
+        path = write_slop(scratch)
+        assert run(post(path))[0] == 0, "file under <tmp>/.../claude-<uid>/ was linted"
+
+def test_stop_note_reaches_the_next_prompt_once():
+    with tempfile.TemporaryDirectory() as d:
+        env = {"CLAUDE_PLUGIN_DATA": d}
+        code, out, err = run({"hook_event_name": "Stop", "session_id": "s-1", "last_assistant_message": "The **build** failed. Run **it** again.\n"}, env=env)
+        assert code == 0 and "systemMessage" in out, (code, out)
+        code, out, err = run({"hook_event_name": "UserPromptSubmit", "session_id": "s-1", "prompt": "next"}, env=env)
+        ctx = json.loads(out)["hookSpecificOutput"]["additionalContext"]
+        assert "2 bold span(s)" in ctx, ctx
+        code, out, err = run({"hook_event_name": "UserPromptSubmit", "session_id": "s-1", "prompt": "again"}, env=env)
+        assert out.strip() == "", f"note delivered twice: {out}"
+
+def test_stop_note_is_per_session_and_absent_on_a_good_reply():
+    with tempfile.TemporaryDirectory() as d:
+        env = {"CLAUDE_PLUGIN_DATA": d}
+        run({"hook_event_name": "Stop", "session_id": "s-1", "last_assistant_message": "The **build** failed.\n"}, env=env)
+        assert pathlib.Path(d, "reply-check-s-1.txt").exists(), "a bad reply left no note, so the leak check is vacuous"
+        code, out, err = run({"hook_event_name": "UserPromptSubmit", "session_id": "s-2", "prompt": "x"}, env=env)
+        assert out.strip() == "", f"note leaked to another session: {out}"
+        run({"hook_event_name": "Stop", "session_id": "s-3", "last_assistant_message": "The build failed. Run it again."}, env=env)
+        assert not pathlib.Path(d, "reply-check-s-3.txt").exists(), "good reply left a note"
+
 def test_garbage_stdin_exits_zero():
     r = subprocess.run([sys.executable, str(HOOK)], input="not json", capture_output=True, text=True)
     assert r.returncode == 0
 
 if __name__ == "__main__":
+    failed = []
     for name, fn in list(globals().items()):
         if name.startswith("test_"):
-            fn(); print("ok", name)
+            try:
+                fn(); print("ok", name)
+            except Exception as err:  # noqa: BLE001  report every failing test, not only the first
+                failed.append(name); print("FAIL", name, err)
+    sys.exit(1 if failed else 0)

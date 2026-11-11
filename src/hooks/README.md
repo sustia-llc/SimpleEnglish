@@ -45,18 +45,27 @@ node --test src/hooks/simple-english-activate.test.js
 
 ## Advisory writing checks (Claude Code)
 
-Two more hooks run under Claude Code, both advisory. Neither one blocks.
+Three more hooks run under Claude Code, all advisory. None of them blocks.
 
 - `PostToolUse` on `Write` and `Edit`: when the file is Markdown, `src/hooks/lint_hook.py` lints the text that the tool wrote. It uses `evals/ste_lint.py` and shows each hit with its file line to the model. For `Edit`, that text is `new_string`. For `Write`, it is the whole file.
-- `Stop`: the same script reads the last reply and adds a system message when the reply breaks the register: an em-dash, bold, a header, a list item, a filler opener or closer, or a slop word.
+- `Stop`: the same script reads the last reply and adds a system message when the reply breaks the register: an em-dash, bold, a header, a list item, a filler opener or closer, or a slop word. The system message goes to the user. The script also saves the result for the session.
+- `UserPromptSubmit`: the same script adds the saved result to the model context at the next prompt of that session, one time. The result file is in `CLAUDE_PLUGIN_DATA`, or in `~/.cache/simple-english` when that variable is not set.
+
+The file check does not report every class that `evals/ste_lint.py` counts:
+
+- Text in double quotes on one line, and blockquote lines, are not linted.
+- Semicolons and em-dashes are not reported.
+- A trailing condition ("X if Y") is reported only when the sentence starts with a command verb. An example is "Restart the service if the build fails."
+- The slop words "harness" and "load-bearing" are not reported. The `Stop` check also ignores them.
 
 Codex runs only the `SessionStart` hook. Test the checks with `python3 src/hooks/test_lint_hook.py`.
 
 ## What the file check skips
 
-The writing rules cover the documents that you write for a reader. They do not cover the files that the agent keeps for itself, such as memory files. A summary of the violations in such a file only spends tokens. The `PostToolUse` check therefore skips three groups of paths:
+The writing rules cover the documents that you write for a reader. They do not cover the files that the agent keeps for itself, such as memory files. A summary of the violations in such a file only spends tokens. The `PostToolUse` check therefore skips four groups of paths:
 
 - Every path under the Claude configuration directory. The check reads `CLAUDE_CONFIG_DIR` and falls back to `~/.claude`.
+- Every path under the system temp directory with a `claude-<number>` directory component. Claude Code keeps the session scratchpad there.
 - Every path with a `.claude` directory component, for example `my-project/.claude/agent-memory/reviewer/MEMORY.md`. A skill or a command that you write under `.claude/` is also skipped.
 - Every path that matches a glob in `SIMPLE_ENGLISH_LINT_EXCLUDE`.
 
