@@ -2,7 +2,7 @@
 
 The Claude Code and Codex plugins include a `SessionStart` hook. The hook loads the Simple English writing rules when a session starts, resumes, clears, or compacts. You do not need to name the skill.
 
-The hook needs Node.js. Both plugins run `src/hooks/simple-english-activate.js` with the `node` command.
+The hook needs Node.js. Both plugins run `src/hooks/simple-english-activate.js` with the `node` command. The Claude Code plugin runs it through `fish -c`, after the fish function `load_nvm` puts the nvm default `node` on the `PATH`. `load_nvm` writes its messages to stderr, so only the rule block reaches the model.
 
 ## Install
 
