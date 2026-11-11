@@ -48,7 +48,7 @@ node --test src/hooks/simple-english-activate.test.js
 Three more hooks run under Claude Code, all advisory. None of them blocks.
 
 - `PostToolUse` on `Write` and `Edit`: when the file is Markdown, `src/hooks/lint_hook.py` lints the text that the tool wrote. It uses `evals/ste_lint.py` and shows each hit with its file line to the model. For `Edit`, that text is `new_string`. For `Write`, it is the whole file.
-- `Stop`: the same script reads the last reply and adds a system message when the reply breaks the register: bold, a header, a list item, a filler opener or closer, or a slop word. The system message goes to the user. The script also saves the result for the session.
+- `Stop`: the same script reads the last reply and adds a system message when the reply breaks the register: bold, a filler opener or closer, or a slop word. The system message goes to the user. The script also saves the result for the session.
 - `UserPromptSubmit`: the same script adds the saved result to the model context at the next prompt of that session, one time. The result file is in `CLAUDE_PLUGIN_DATA`, or in `~/.cache/simple-english` when that variable is not set.
 
 The file check does not report every class that `evals/ste_lint.py` counts:
